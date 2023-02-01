@@ -4,6 +4,7 @@ from rest_framework.viewsets import ViewSet
 from rest_framework.response import Response
 from rest_framework import serializers, status
 from repairsapi.models import ServiceTicket, Employee, Customer
+from datetime import datetime
 
 
 class TicketView(ViewSet):
@@ -71,10 +72,14 @@ class TicketView(ViewSet):
         ticket = ServiceTicket.objects.get(pk=pk)
 
         employee_id = request.data['employee']
-
         employee = Employee.objects.get(pk=employee_id)
-
         ticket.employee = employee
+
+        if request.data['date_completed'] is not None:
+            raw_date_completed = request.data['date_completed']
+            date_format = "%m/%d/%Y"
+            date_completed = datetime.strptime(raw_date_completed, date_format)
+            ticket.date_completed = date_completed
 
         ticket.save()
 
