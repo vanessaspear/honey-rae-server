@@ -3,7 +3,7 @@ from django.http import HttpResponseServerError
 from rest_framework.viewsets import ViewSet
 from rest_framework.response import Response
 from rest_framework import serializers, status
-from repairsapi.models import ServiceTicket
+from repairsapi.models import ServiceTicket, Employee, Customer
 
 
 class TicketView(ViewSet):
@@ -17,7 +17,7 @@ class TicketView(ViewSet):
         """
 
         tickets = ServiceTicket.objects.all()
-        serialized = TicketSerializer(tickets, many=True)
+        serialized = ServiceTicketSerializer(tickets, many=True)
         return Response(serialized.data, status=status.HTTP_200_OK)
 
     def retrieve(self, request, pk=None):
@@ -28,12 +28,29 @@ class TicketView(ViewSet):
         """
 
         ticket = ServiceTicket.objects.get(pk=pk)
-        serialized = TicketSerializer(ticket, context={'request': request})
+        serialized = ServiceTicketSerializer(ticket, context={'request': request})
         return Response(serialized.data, status=status.HTTP_200_OK)
 
+class TicketEmployeeSerializer(serializers.ModelSerializer):
+    """JSON serializer for employee"""
+    class Meta:
+        model = Employee
+        fields = ('id', 'full_name', 'specialty')
 
-class TicketSerializer(serializers.ModelSerializer):
+class TicketCustomerSerializer(serializers.ModelSerializer):
+    """JSON serializer for customer"""
+    class Meta:
+        model = Customer
+        fields = ('id', 'full_name', 'address')
+
+class ServiceTicketSerializer(serializers.ModelSerializer):
     """JSON serializer for tickets"""
+
+    employee = TicketEmployeeSerializer(many=False)
+
+    customer = TicketCustomerSerializer(many=False)
+
     class Meta:
         model = ServiceTicket
-        fields = ('id', 'description', 'emergency', 'date_completed', 'customer_id', 'employee_id')
+        fields = ('id', 'description', 'emergency', 'date_completed', 'customer', 'employee')
+        depth = 1
